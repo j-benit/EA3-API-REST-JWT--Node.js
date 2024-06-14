@@ -1,41 +1,38 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
-const router = express.Router();
-const secretKey = 'clave_secreta_para_el_token';
+const connectDB = require('./db/connect-mongo');
+const estadoEquipoRoutes = require('./routers/estadoEquipo');
+const inventarioRoutes = require('./routers/inventario');
+const marcaRoutes = require('./routers/marca');
+const tipoEquipoRoutes = require('./routers/tipoEquipo');
+const usuarioRoutes = require('./routers/usuario');
+const authRoutes = require('./routers/auth');
+require('dotenv').config();
 
-// Endpoint para iniciar sesión y obtener el token
-router.post('/login', (req, res) => {
-  const { username, password } = req.body;
+const app = express();
 
-  // Verifica las credenciales (en un entorno real, se verificarían con una base de datos)
-  if (username === 'usuario' && password === 'contraseña') {
-    const token = jwt.sign({ username }, secretKey, { expiresIn: '1h' });
-    res.json({ token });
-  } else {
-    res.status(401).json({ message: 'Credenciales inválidas' });
-  }
+// Middleware
+app.use(express.json());
+
+// Conectar a la base de datos
+connectDB();
+
+// Ruta para la raíz de la API
+app.get('/', (req, res) => {
+  res.send('¡Bienvenido a mi API!');
 });
 
-// Middleware para verificar el token en las peticiones protegidas
-const verificarToken = (req, res, next) => {
-  const token = req.headers['authorization'];
+// Rutas
+app.use('/',authRoutes);
+app.use('/api/estadoEquipo', estadoEquipoRoutes);
+app.use('/api/inventario', inventarioRoutes);
+app.use('/api/marca', marcaRoutes);
+app.use('/api/tipoEquipo', tipoEquipoRoutes);
+app.use('/api/usuario', usuarioRoutes);
 
-  if (!token) {
-    return res.status(401).json({ message: 'Token no proporcionado' });
-  }
+// Puerto
+const PORT = process.env.PORT ;
 
-  jwt.verify(token, secretKey, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ message: 'Token inválido' });
-    }
-    req.usuario = decoded;
-    next();
-  });
-};
-
-// Ruta protegida que requiere autenticación mediante token
-router.get('/recurso-protegido', verificarToken, (req, res) => {
-  res.json({ message: 'Acceso permitido al recurso protegido', usuario: req.usuario });
+// Iniciar servidor
+app.listen(PORT, () => {
+  console.log(`Servidor iniciado en el puerto ${PORT}`);
 });
-
-module.exports = router;

@@ -63,7 +63,7 @@ router.post('/', [
         });
 
         await usuario.save();
-        res.status(201).json({ message: 'Usuario creado correctamente' });
+        res.status(201).json({ message: 'Usuario creado correctamente', estado});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
